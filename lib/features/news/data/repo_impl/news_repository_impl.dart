@@ -10,8 +10,16 @@ class NewsRepositoryImpl implements NewsRepository {
   final NewsDataSource dataSource;
 
   @override
-  Future<List<NewsArticleEntity>> getEverythingArticles(String query) async {
-    final models = await dataSource.getEverything(query);
+  Future<List<NewsArticleEntity>> getEverythingArticles(
+    String query, {
+    required int page,
+    required int pageSize,
+  }) async {
+    final models = await dataSource.getEverything(
+      query,
+      page: page,
+      pageSize: pageSize,
+    );
     return models.map((e) => e.fromModelToEntity()).toList();
   }
 }

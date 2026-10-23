@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:home1/core/di/injection.dart';
+import 'package:home1/core/service/storage_service/storage_service.dart';
+import 'package:home1/features/auth/ui/presentation/auth_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -9,6 +12,36 @@ class ProfilePage extends StatelessWidget {
     'ORDER PREFERENCES',
     'LOGOUT',
   ];
+
+  Future<void> _onLogoutTap(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Вы уверены?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Нет'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Да'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await getIt<StorageService>().clearAuth();
+    if (!context.mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthPage()),
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +63,9 @@ class ProfilePage extends StatelessWidget {
                 (title) => Column(
                   children: [
                     InkWell(
-                      onTap: () {},
+                      onTap: title == 'LOGOUT'
+                          ? () => _onLogoutTap(context)
+                          : () {},
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         child: Row(

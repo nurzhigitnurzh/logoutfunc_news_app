@@ -28,12 +28,30 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   final _controller = TextEditingController();
+  final _scrollController = ScrollController();
   String _query = 'tesla';
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 300) {
+      context.read<NewsBloc>().add(const LoadMoreNewsEvent());
+    }
   }
 
   void _search() {
@@ -41,6 +59,7 @@ class _HomeViewState extends State<_HomeView> {
     if (text.isEmpty) return;
     FocusScope.of(context).unfocus();
     setState(() => _query = text);
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
     context.read<NewsBloc>().add(GetNewsEvent(text));
   }
 
@@ -56,6 +75,8 @@ class _HomeViewState extends State<_HomeView> {
               const SizedBox(height: 16),
               TextField(
                 controller: _controller,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _search(),
                 decoration: InputDecoration(
                   hintText: 'Search here...',
                   hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
@@ -103,43 +124,47 @@ class _HomeViewState extends State<_HomeView> {
                             ],
                           ),
                         ),
-                      NewsLoaded(:final articles) => articles.isEmpty
-                          ? const Center(child: Text('Ничего не найдено'))
-                          : GridView.builder(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              itemCount: articles.length + 1,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                childAspectRatio: 0.52,
-                              ),
-                              itemBuilder: (context, index) {
-                                if (index == articles.length) {
-                                  return const Center(
-                                    child: Text(
-                                      'You reached the end',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey,
-                                      ),
+                      NewsLoaded(
+                        :final articles,
+                        :final isLoadingMore,
+                        :final hasReachedMax,
+                      ) =>
+                        articles.isEmpty
+                            ? const Center(child: Text('Ничего не найдено'))
+                            : CustomScrollView(
+                                controller: _scrollController,
+                                slivers: [
+                                  SliverGrid.builder(
+                                    itemCount: articles.length,
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 16,
+                                      crossAxisSpacing: 16,
+                                      childAspectRatio: 0.52,
                                     ),
-                                  );
-                                }
-                                final article = articles[index];
-                                return NewsCard(
-                                  article: article,
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          DetailsPage(article: article),
+                                    itemBuilder: (context, index) {
+                                      final article = articles[index];
+                                      return NewsCard(
+                                        article: article,
+                                        onTap: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                DetailsPage(article: article),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  SliverToBoxAdapter(
+                                    child: _ListFooter(
+                                      isLoadingMore: isLoadingMore,
+                                      hasReachedMax: hasReachedMax,
                                     ),
                                   ),
-                                );
-                              },
-                            ),
+                                ],
+                              ),
                     };
                   },
                 ),
@@ -147,6 +172,37 @@ class _HomeViewState extends State<_HomeView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ListFooter extends StatelessWidget {
+  const _ListFooter({
+    required this.isLoadingMore,
+    required this.hasReachedMax,
+  });
+
+  final bool isLoadingMore;
+  final bool hasReachedMax;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: isLoadingMore
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : hasReachedMax
+                ? const Text(
+                    'You reached the end',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  )
+                : const SizedBox.shrink(),
       ),
     );
   }

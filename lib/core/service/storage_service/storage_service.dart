@@ -1,7 +1,9 @@
 abstract interface class StorageService {
   Future<bool> isOnboardingSeen();
-  Future<bool> isAuthorized();
-
   Future<void> setOnboardingSeen();
+
+  Future<bool> isAuthorized();
   Future<void> setAuthorized(bool value);
+
+  Future<void> clearAuth();
 }

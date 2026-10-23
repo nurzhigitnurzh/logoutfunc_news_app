@@ -17,12 +17,30 @@ class NewsLoading extends NewsState {
 }
 
 class NewsLoaded extends NewsState {
-  const NewsLoaded(this.articles);
+  const NewsLoaded({
+    required this.articles,
+    this.hasReachedMax = false,
+    this.isLoadingMore = false,
+  });
 
   final List<NewsArticleEntity> articles;
+  final bool hasReachedMax;
+  final bool isLoadingMore;
+
+  NewsLoaded copyWith({
+    List<NewsArticleEntity>? articles,
+    bool? hasReachedMax,
+    bool? isLoadingMore,
+  }) {
+    return NewsLoaded(
+      articles: articles ?? this.articles,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
 
   @override
-  List<Object?> get props => [articles];
+  List<Object?> get props => [articles, hasReachedMax, isLoadingMore];
 }
 
 class NewsError extends NewsState {

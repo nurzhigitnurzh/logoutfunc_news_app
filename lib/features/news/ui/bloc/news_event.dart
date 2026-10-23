@@ -15,3 +15,7 @@ class GetNewsEvent extends NewsEvent {
   @override
   List<Object?> get props => [query];
 }
+
+class LoadMoreNewsEvent extends NewsEvent {
+  const LoadMoreNewsEvent();
+}

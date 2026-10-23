@@ -11,14 +11,15 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
 import 'package:dio/dio.dart' as _i361;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:home1/core/di/register_module.dart' as _i716;
 import 'package:home1/core/service/storage_service/storage_service.dart'
-    as _i497;
+    as _i498;
 import 'package:home1/core/service/storage_service/storage_service_impl.dart'
     as _i627;
 import 'package:home1/features/news/data/remote/api/news_data_source.dart'
-    as _i498;
+    as _i497;
 import 'package:home1/features/news/data/remote/impl/news_data_source_impl.dart'
     as _i839;
 import 'package:home1/features/news/data/repo_impl/news_repository_impl.dart'
@@ -38,14 +39,20 @@ extension GetItInjectableX on _i174.GetIt {
     final registerModule = _$RegisterModule();
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i460.SharedPreferencesAsync>(() => registerModule.prefs);
-    gh.lazySingleton<_i497.StorageService>(
-      () => _i627.StorageServiceImpl(gh<_i460.SharedPreferencesAsync>()),
+    gh.lazySingleton<_i558.FlutterSecureStorage>(
+      () => registerModule.secureStorage,
     );
-    gh.lazySingleton<_i498.NewsDataSource>(
+    gh.lazySingleton<_i497.NewsDataSource>(
       () => _i839.NewsDataSourceImpl(dio: gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i498.StorageService>(
+      () => _i627.StorageServiceImpl(
+        gh<_i460.SharedPreferencesAsync>(),
+        gh<_i558.FlutterSecureStorage>(),
+      ),
+    );
     gh.lazySingleton<_i800.NewsRepository>(
-      () => _i220.NewsRepositoryImpl(dataSource: gh<_i498.NewsDataSource>()),
+      () => _i220.NewsRepositoryImpl(dataSource: gh<_i497.NewsDataSource>()),
     );
     gh.factory<_i595.NewsBloc>(
       () => _i595.NewsBloc(repository: gh<_i800.NewsRepository>()),
